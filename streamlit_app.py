@@ -40,7 +40,7 @@ The following questions will be addressed in this analysis:
 
 
                               
-#@st.cache_data
+@st.cache_data
 def load_data():
     df = pd.read_excel(data_path)
     #df = pd.read_csv(DATA_URL)
