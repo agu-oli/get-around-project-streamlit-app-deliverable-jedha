@@ -30,11 +30,12 @@ We will provide data insights to help the product manager decide on:
 The following questions will be addressed in this analysis:
 - Drivers on time vs drivers late for check-out. How does it impact the next driver?
 - What share of our owners' revenue would potentially be affected by the feature?
-- How many problematic cases could be solved with this feature?
-    - Check-in delay analysis
-    - Analysis of problematic cases based on time delta:
-        - All types of cars
-        - Connect check-in cars vs. mobile check-in cars
+- How many problematic cases could be solved with this feature depending on the threshold and the scope?
+    - Scope and threshold analysis
+        -  Check-in delay analysis
+        -  Analysis of problematic cases based on time delta:
+            -  All types of cars
+            - Connect check-in cars vs. mobile check-in cars
 """)
 
 
@@ -139,18 +140,32 @@ df_late_checkin = df[df['time_delta_with_previous_rental_in_minutes'] > 0]
 # Streamlit app title
 st.write("Quartile Visualization of Time Delta Between Rentals")
 
-# Box plot of 'time_delta_with_previous_rental_in_minutes' with updated layout
-fig = px.box(df_late_checkin, y="time_delta_with_previous_rental_in_minutes", title="Box Plot: Time Delta Between Rentals",
-             color_discrete_sequence=["#636EFA"])  # Adjust the color of the box plot (blue by default)
+fig = px.box(df_late_checkin, y="time_delta_with_previous_rental_in_minutes",
+            title="Time Delta Between Rentals (quartile distribution)",
+            color_discrete_sequence=["#636EFA"])  # Adjust the color of the box plot (blue by default)
 
 # Update layout to use a white background
 fig.update_layout(
-    plot_bgcolor="white",   # Set plot background to white
-    paper_bgcolor="white",  # Set overall background to white
-    font_color="black",     # Set font color to black for contrast
-    title_x=0.5             # Center the title
-)
+    plot_bgcolor="black",   # Set plot background to white
+    paper_bgcolor="black",  # Set overall background to white
+    font_color="white",     # Set font color to black for contrast
+    title_x=0.5,             # Center the title
+    xaxis_title="Rentals",  # Label for x-axis
+    yaxis_title="Time Delta (in minutes)",  # Label for y-axis
+    xaxis=dict(
+        showgrid=True, 
+        zeroline=False, 
+        tickfont=dict(color="white"),  # Make x-axis ticks black
+        title_font=dict(color="white")  # Make x-axis title black
+    ),
+    yaxis=dict(
+        showgrid=True, 
+        zeroline=False, 
+        tickfont=dict(color="white"),  # Make y-axis ticks black
+        title_font=dict(color="white"),  # Make y-axis title black
+    ),
 
+)
 # Display the box plot in Streamlit
 st.plotly_chart(fig)
 
@@ -170,23 +185,25 @@ st.write(f"Rentals Affected: {num_rentals_concerned}")
 st.write(f"Percentage of Rentals Affected: {percentage_rentals_affected:.2f}%")
 
 
-# Optionally, display a gauge chart for percentage visualization
 gauge_fig = px.pie(
     names=["Affected Rentals", "Unaffected Rentals"],
     values=[percentage_rentals_affected, 100 - percentage_rentals_affected],
     title="Percentage of Rentals Affected",
-    hole=0.7  # Makes the pie chart a donut (gauge-like)
+    hole=0.7 
 )
 
-# Update gauge layout
+gauge_fig.update_traces(
+    textinfo="label+percent",  # show labels and percentages
+    textfont_size=12,         
+)
+
 gauge_fig.update_layout(
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    font_color="black",
+    plot_bgcolor="black",
+    paper_bgcolor="black",
+    font_color="white",
     title_x=0.5
 )
 
-# Display the gauge chart in Streamlit
 st.plotly_chart(gauge_fig)
 
 #st.markdown("""
@@ -210,7 +227,7 @@ Additionally, this feature can be applied to two different types of cars in our 
 
 st.subheader(" How many problematic cases will this feature solve depending on the chosen threshold and scope?")
 
-st.write('Problematic are those where the delay in the checkout also coincides with a delay in the planned of the following rental.')
+st.write('Problematic cases are those where the delay in the checkout also coincides with a delay in the planned of the following rental.')
 
 # Calculate the number of problematic cases
 prob_cases = ((df['time_delta_with_previous_rental_in_minutes'] > 0) & (df['delay_at_checkout_in_minutes'] > 0)).sum()
@@ -229,11 +246,16 @@ gauge_fig = px.pie(
     hole=0.7  # Makes it a donut (gauge-like)
 )
 
+gauge_fig.update_traces(
+    textinfo="label+percent",  # show labels and percentages
+    textfont_size=12,         
+)
+
 # Update the layout for white background and better color contrast
 gauge_fig.update_layout(
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    font_color="black",
+    plot_bgcolor="black",
+    paper_bgcolor="black",
+    font_color="white",
     title_x=0.5  # Centers the title
 )
 
@@ -247,9 +269,9 @@ st.subheader("Problematic Cases Resolved by the Feature")
 st.write(f"It would resolve {prob_cases} problematic cases.")
 st.write(f"This means {percentage_prob_cases:.2f}% of cases over the total number of rentals.")
 
-
-st.subheader('Check-in Delay Analysis')
 st.subheader("Scope and threshold analysis")
+st.subheader('Check-in Delay Analysis')
+
 
 df_mobile = df[df['checkin_type']=='mobile']
 df_connect = df[df['checkin_type']=='connect']
